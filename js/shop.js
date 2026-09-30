@@ -248,8 +248,9 @@
         if (!a || typeof a !== "object") return;
         if (!String(a.artist || "").trim() && !String(a.album || "").trim()) return;   // the empty example line
         var rec = makeRecord(a, room.fullId);
-        if (seen[rec.key]) return;                                       // listed twice in one file
-        seen[rec.key] = true;
+        var dup = rec.key + "|" + String(a.released || "").slice(0, 4);   // same album, same year = listed twice
+        if (seen[dup]) return;                                           // (two editions with different years both show)
+        seen[dup] = true;
         rec.i = records.length;
         records.push(rec);
       });
