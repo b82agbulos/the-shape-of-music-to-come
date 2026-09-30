@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Shape of Music to Come</title>
+  <meta name="description" content="A record shop and listening hang-out, room by room.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bungee&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/shop.css">
+  <link rel="preload" as="image" href="images/rooms/storefront.jpg">
+</head>
+<body data-page="storefront">
+
+  <!-- the street: storefront image; the open doorway is the way in -->
+  <section class="street" id="street" aria-label="Storefront">
+    <div class="street-blur" aria-hidden="true"></div>
+    <h1 class="street-title neon">The Shape of Music to Come</h1>
+    <div class="facade">
+      <img src="" alt="The Shape of Music to Come, a record shop with its door open at night">
+      <a class="door" href="#directory"><span>Step inside</span></a>
+    </div>
+    <a class="street-hint" href="#directory">Store directory</a>
+  </section>
+
+  <main class="directory wrap" id="directory">
+    <header class="directory-head">
+      <h1 class="neon">Store Directory</h1>
+      <p id="directory-stats"></p>
+    </header>
+    <div id="directory-rooms"></div>
+  </main>
+
+  <footer class="site-foot">The Shape of Music to Come</footer>
+
+  <script src="js/shop-map.js"></script>
+  <script src="js/cover-library.js"></script>
+  <script src="js/staff-picks.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/now-playing.js"></script>
+</body>
+</html>
