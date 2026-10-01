@@ -1,11 +1,11 @@
 # The Shape of Music to Come
 
-A record shop you walk through: storefront → Store Directory → rooms → sub-rooms.
+A record hang-out you walk through: entrance → Directory → rooms → sub-rooms.
 Static site (HTML/CSS/JS, no build step). Runs on GitHub Pages the same way Melodic Mosaic does,
 and opens straight from your hard drive for previewing (double-click `index.html`).
 
 ```
-index.html            storefront + Store Directory
+index.html            entrance + Directory
 room.html             every room and section (room.html?s=metal/thrash)
 albums/               ONE FILE PER ROOM OR SECTION: the albums you put on its shelves
 js/shop-map.js        the store layout: rooms, order, colours, images, Last.fm
@@ -46,9 +46,9 @@ How your files were assigned:
 | `Hip Hop- Hip Hop.png`, `R&B Soul Funk- R&B Soul Funk.png`, `Halloween.0.png` | banner above that room's own bins (records not in a sub-room) |
 | everything else | its room or sub-room |
 
-**No picture yet:** Halloween › Stage & Screen (borrows the Halloween picture) and Playlists
-(borrows the storefront). When you make them, save as `Halloween- Stage & Screen.png` / `Playlists.png`,
-rerun the script, and delete `img: false` from those two rooms in `js/shop-map.js`.
+Every room now has its own picture: `Halloween- Stage & Screen.png` is the Halloween › Stage & Screen
+room and `Playlists.png` is the Playlists room. When you add or replace a picture, just rerun the script.
+If a room ever has no picture, it borrows its parent room's (or the storefront) until you add one.
 
 You don't need to bake text into the pictures. Each room's name is shown as a neon sign under the picture.
 
@@ -79,8 +79,9 @@ shelf([
 ```
 
 - Copy the blank line, fill in the quotes, keep the **comma at the end**. The blank line is ignored.
-- **spotify** is the album's Spotify link (in Spotify: **… → Share → Copy link to album**). Play opens it,
-  and the album's cover is taken from Spotify automatically. The `?si=…` tail on copied links is fine.
+- **spotify** is the album's Spotify link (in Spotify: **… → Share → Copy link to album**). Clicking the
+  record pops Spotify's player out next to it, so visitors stay on the site (click it again, ×, or Esc to put it
+  away; Ctrl/⌘-click still opens Spotify in a new tab). The album's cover is taken from Spotify automatically. The `?si=…` tail on copied links is fine.
   An album with `spotify: ""` still shows, with "Link coming" on hover.
 - **released** can be `"1986"` or `"1986-03-03"`. It drives the release-date sorts.
 - Order in the file doesn't matter; the site alphabetizes.
@@ -99,14 +100,30 @@ shelf([
 | `link: "https://..."` | For an album that isn't on Spotify: Play opens this link instead (Drive, Bandcamp, YouTube…) |
 | `sortAs: "Dylan, Bob"` | File it under a different name |
 
+**Podcasts and radio shows:** put the show's name in `artist`, `"Podcast"` in `album`, and the years it ran in
+`released` (`"2020-2021"` shows as 2020–2021). A Spotify show or episode link (`open.spotify.com/show/…`) works in `spotify`.
+
 **Covers** come from Spotify for every album with a `spotify` link: the site asks Spotify's public
 embed service for the album's cover (640 px) as the record scrolls into view, and each browser remembers
 the answer. For an album that isn't on Spotify, save a cover in `images/covers/` named exactly
 **Artist - Album** with `.jpg` or `.png`, matching the `artist` and `album` text
 (e.g. `images/covers/Chuck Berry - Chuck Berry's Golden Decade.jpg`), and it's picked up with no code.
 Leave out characters Windows won't allow in file names (`\ / : * ? " < > |`); GitHub Pages is
-case-sensitive, so capitals must match. Order of preference: `cover:` on the line → Spotify → your saved
-`Artist - Album` image → the Melodic Mosaic cover → a plain labelled sleeve.
+case-sensitive, so capitals must match.
+
+When none of those has a cover, the site looks the album up on **Wikipedia**, then **MusicBrainz's Cover Art
+Archive**, then **Apple Music**, and only uses an answer whose title and artist match the line. Those three are
+asked one record at a time (MusicBrainz allows about one lookup a second, Apple about 20 a minute), records
+on screen first, so in a room with many unlinked albums the first visit fills in over a minute or two; after
+that the browser remembers every answer and they appear straight away. Adding the album's Spotify link
+makes its cover instant for everyone.
+
+Bandcamp and Discogs can't be searched from a web page (Discogs needs your personal key, which would be
+public on GitHub), but their covers work by hand: right-click the cover on the album's page → **Copy image
+address**, and paste it as `cover: "https://f4.bcbits.com/img/....jpg"`.
+
+Order of preference: `cover:` on the line → Spotify → your saved `Artist - Album` image → the Melodic Mosaic
+cover → Wikipedia → Cover Art Archive → Apple Music → a plain labelled sleeve.
 
 ```js
   { artist: "Joy Division", album: "Unknown Pleasures", released: "1979-06-15",
@@ -120,8 +137,7 @@ the file; F12 → Console gives the line number. One broken file never affects t
 
 ## House Staff Picks (`js/staff-picks.js`)
 
-- **`window`**: the Staff Picks display at the top of the Store Directory, before anyone walks into a
-  room. Shown in the order listed, five on the top shelf and four below. Each line carries its own
+- **`window`**: the Staff Picks display at the bottom of the Directory, below the rooms. Shown in the order listed, five on the top shelf and four below. Each line carries its own
   Spotify link; if the same album is also filed in a room, the room's line is used (and the display
   gets a "Find it in …" link to that room).
 - **`always`**: albums that are a Staff Pick in whatever room they're filed in, automatically. No
@@ -132,7 +148,7 @@ the file; F12 → Console gives the line number. One broken file never affects t
 
 ## 3. How a room is laid out
 
-The Store Directory only shows the main rooms. Sections stay out of sight until you walk into a room.
+The Directory only shows the main rooms. Sections stay out of sight until you walk into a room.
 
 1. The room scene (your 1920×1080 picture) and its neon sign
 2. **Sections**: the sub-rooms, as doorways (only on rooms that have them)
@@ -189,3 +205,7 @@ Names are shown exactly as Last.fm has them (the Melodic Mosaic version title-ca
 2. Upload everything in this folder, including `images/rooms/`. (The original PNGs and `tools/` can stay on your computer.)
 3. Settings → Pages → Deploy from branch → `main` / root.
 4. It'll be at `https://b82agbulos.github.io/the-shape-of-music-to-come/`.
+
+**Phones showing an old look after an update?** Browsers keep old copies of `css/shop.css` and the `js/`
+files. `index.html` and `room.html` load them as `shop.css?v=20260930f` etc.; whenever a new `css/` or `js/`
+file goes up, change that `v=` value in both pages (any new text works) and every browser fetches the new one.
