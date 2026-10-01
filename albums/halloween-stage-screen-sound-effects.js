@@ -27,6 +27,23 @@
 
 shelf([
 
+  { artist: "D", album: "Halloween", released: "1969", spotify: "" },
+  { artist: "Disneyland", album: "Chilling, Thrilling Sounds of the Haunted House", released: "1964", spotify: "" },
+  { artist: "Gayle House", album: "The Haunting", released: "1971", spotify: "" },
+  { artist: "Haunted House Music Co.", album: "Haunted House", released: "1985", spotify: "" },
+  { artist: "Haunted House Music Co.", album: "Night In A Graveyard", released: "1985", spotify: "" },
+  { artist: "HRB Music Company", album: "Horror Sounds of Terror - Terror 61 Sounds of Horror", released: "1979", spotify: "" },
+  { artist: "J. Robert Elliot", album: "Halloween Horrors: The Sounds Of Halloween (And Other Useful Effects)", released: "1977", spotify: "" },
+  { artist: "Jane Gipps and Ralph Harding", album: "Halloween Sound Effects: Music and Effects Of A Terrifying Nature", released: "1982", spotify: "" },
+  { artist: "Johnson Smith Novelty Company", album: "Horror Record", released: "1973", spotify: "" },
+  { artist: "MP-TV Services Inc", album: "Spook Stuff For Hallowe'en", released: "1960", spotify: "" },
+  { artist: "Peter Waldron, Gershon Kingsley", album: "Ghostly Sounds", released: "1973", spotify: "" },
+  { artist: "Pickwick", album: "Sounds To Make You Shiver!", released: "1974", spotify: "" },
+  { artist: "Power Records", album: "Ghostly Sounds", released: "1971", spotify: "" },
+  { artist: "Sounds Records", album: "Hallowe'en Spooky Sounds", released: "1962", spotify: "" },
+  { artist: "Sounds Records", album: "Spooky Sound Effects", released: "1961", spotify: "" },
+  { artist: "The Kid Stuff Repertory Company", album: "Mostly Ghostly", released: "1977", spotify: "" },
+
   { artist: "", album: "", released: "", spotify: "" },
 
 ]);

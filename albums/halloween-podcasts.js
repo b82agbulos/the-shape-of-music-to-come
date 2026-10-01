@@ -26,6 +26,10 @@
 */
 
 shelf([
+  /* Podcasts and broadcasts: the show in artist and album, and the years it ran in released
+     ("1974-2024" shows as 1974–2024). A Spotify show or episode link works in spotify. */
+
+  { artist: "Dr. Demento", album: "Halloween Special", released: "1974-2024", spotify: "" },
 
   { artist: "", album: "", released: "", spotify: "" },
 

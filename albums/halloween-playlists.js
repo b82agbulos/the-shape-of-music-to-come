@@ -27,6 +27,12 @@
 
 shelf([
 
+  { artist: "Various Artists", album: "200 Spine-Tingling Songs", released: "", spotify: "" },
+  { artist: "Various Artists", album: "A Haunting We Will Go", released: "2008", spotify: "" },
+  { artist: "Various Artists", album: "Creepiest Rockers", released: "", spotify: "" },
+  { artist: "Various Artists", album: "Creepy Classics", released: "", spotify: "" },
+  { artist: "Various Artists", album: "Every Day Is Halloween", released: "", spotify: "" },
+
   { artist: "", album: "", released: "", spotify: "" },
 
 ]);
