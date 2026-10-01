@@ -1,8 +1,8 @@
 /* =====================================================================
-   THE SHAPE OF MUSIC TO COME — store layout
+   THE SHAPE OF MUSIC TO COME — site layout
    ---------------------------------------------------------------------
    Every room, sub-room and sub-sub-room lives here. Order in this file
-   = order in the Store Directory and the "next room" walk.
+   = order in the Directory and the "next room" walk.
 
    Room fields
      id      short id, unique among its siblings. The full id is the path,

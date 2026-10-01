@@ -1,8 +1,8 @@
 /* =====================================================================
    HOUSE STAFF PICKS
    ---------------------------------------------------------------------
-   1) window  — the display on the Store Directory page, before anyone
-                walks into a room. Shown in this order.
+   1) window  — the Staff Picks display at the bottom of the Directory
+                page, below the rooms. Shown in this order.
                 spotify: is used for Play and the cover. If the same album
                 is also filed in a room, that room's line is used instead,
                 so editing it there updates the window too.

@@ -59,9 +59,13 @@
     return /[A-Z]/.test(c) ? c : "#";
   }
   function dateKey(d) {
-    var m = String(d || "").match(/^(\d{4})(?:-(\d{1,2}))?(?:-(\d{1,2}))?/);
+    var m = String(d || "").match(/^(\d{4})(?:-(\d{1,2})(?!\d))?(?:-(\d{1,2}))?/);   // "2020-2021" sorts as 2020, not month 20
     if (!m) return null;
     return m[1] + "-" + (m[2] || "00").padStart(2, "0") + "-" + (m[3] || "00").padStart(2, "0");
+  }
+  function yearRange(d) {
+    var m = String(d || "").match(/^(\d{4})\s*[-–]\s*(\d{4}|present|now)$/i);
+    return m ? m[1] + "–" + m[2] : "";
   }
   function plural(n, one, many) { return n + " " + (n === 1 ? one : (many || one + "s")); }
   function roomHref(r) { return "room.html?s=" + r.fullId.split("/").map(encodeURIComponent).join("/"); }
@@ -115,7 +119,7 @@
   }
   // spotify: "https://open.spotify.com/album/6eedtCtCjibu80yOhylSGL?si=…", ".../intl-es/album/…" or "spotify:album:6eedt…"
   function spotifyRef(v) {
-    var m = String(v || "").match(/(album|playlist|track)[\/:]([A-Za-z0-9]{22})/);
+    var m = String(v || "").match(/(album|playlist|track|show|episode)[\/:]([A-Za-z0-9]{22})/);   // show/episode = podcasts
     return m ? { type: m[1], id: m[2], url: "https://open.spotify.com/" + m[1] + "/" + m[2] } : null;
   }
   // Spotify's public oEmbed gives each album's cover (300 px); the same image id with a
@@ -162,6 +166,127 @@
   function coverPath(c) {
     c = String(c || "").trim();
     return c && !/[\/:]/.test(c) ? "images/covers/" + c : c;
+  }
+
+  /* ---------- covers from the web, for albums Spotify can't supply: Wikipedia, then MusicBrainz's
+     Cover Art Archive, then Apple Music. Each is asked only when the record scrolls into view, the
+     answer must match the artist and title, and answers are remembered in this browser
+     (a miss is asked again after a week). ---------- */
+  var webCache = store("tsomtc.webCovers") || {};
+  var WEB_SOURCES = ["wikipedia", "musicbrainz", "apple"];
+  var webQ = {
+    wikipedia:   { busy: 0, max: 3, gap: 100,  q: [] },
+    musicbrainz: { busy: 0, max: 1, gap: 1100, q: [] },     // MusicBrainz asks for about one lookup a second
+    apple:       { busy: 0, max: 1, gap: 3100, q: [] }      // Apple allows about 20 a minute
+  };
+  // how far a record is from the screen; lookups go nearest-first, so whatever you're looking at is
+  // answered before records you scrolled past
+  function offScreen(els) {
+    var best = Infinity, vh = window.innerHeight || 800;
+    els.forEach(function (el) {
+      if (!el.isConnected) return;
+      var r = el.getBoundingClientRect();
+      best = Math.min(best, r.bottom < 0 ? -r.bottom : r.top > vh ? r.top - vh : 0);
+    });
+    return best;
+  }
+  function webQueue(src, els, job) {       // els: the records waiting on this answer
+    var Q = webQ[src];
+    return new Promise(function (resolve) {
+      Q.q.push({ els: els, run: function () {
+        return Promise.resolve().then(job).then(resolve, function () { resolve(undefined); });   // undefined = couldn't ask
+      } });
+      (function pump() {
+        while (Q.busy < Q.max && Q.q.length) {
+          var pick = 0, best = Infinity;
+          for (var i = 0; i < Q.q.length; i++) {
+            var d = offScreen(Q.q[i].els);
+            if (d < best) { best = d; pick = i; if (!d) break; }
+          }
+          Q.busy++;
+          Q.q.splice(pick, 1)[0].run().then(function () { setTimeout(function () { Q.busy--; pump(); }, Q.gap); });
+        }
+      })();
+    });
+  }
+  function sameTitle(a, b) {             // "Nevermind" ~ "Nevermind (Remastered)" ~ "Nevermind - EP"
+    a = loose(String(a || "").replace(/\s+-\s+(single|ep)$/i, ""));
+    b = loose(String(b || "").replace(/\s+-\s+(single|ep)$/i, ""));
+    return !!a && !!b && (a === b || (a.length > 4 && b.length > 4 && (a.indexOf(b + " ") === 0 || b.indexOf(a + " ") === 0)));
+  }
+  function mentions(text, name) { var n = loose(name); return !!n && (" " + loose(text) + " ").indexOf(" " + n + " ") > -1; }
+  function isVarious(artist) { return /^various( artists)?$/i.test(String(artist || "").trim()); }
+  var appleN = 0;
+  var WEB = {
+    wikipedia: function (rec) {
+      var q = '"' + rec.album.replace(/"/g, "") + '" ' + (isVarious(rec.artist) ? "compilation" : rec.artist) + " album";
+      return fetch("https://en.wikipedia.org/w/api.php?action=query&format=json&formatversion=2&origin=*&redirects=1" +
+          "&generator=search&gsrlimit=6&gsrsearch=" + encodeURIComponent(q) +
+          "&prop=pageimages%7Cdescription&piprop=thumbnail&pithumbsize=640&pilicense=any")
+        .then(function (r) { if (!r.ok) throw r.status; return r.json(); })
+        .then(function (d) {
+          var pages = ((d.query || {}).pages || []).slice().sort(function (a, b) { return a.index - b.index; });
+          for (var i = 0; i < pages.length; i++) {
+            var p = pages[i], about = (p.description || "") + " " + p.title;
+            if (!p.thumbnail || !sameTitle(p.title.replace(/\s*\([^)]*\)\s*$/, ""), rec.album)) continue;
+            if (!/\b(album|EP|mixtape|soundtrack|compilation|record|recording|single|box set)\b/i.test(about)) continue;
+            if (isVarious(rec.artist) || mentions(about, rec.artist)) return p.thumbnail.source;
+          }
+          return null;
+        });
+    },
+    musicbrainz: function (rec) {
+      var esc = function (s) { return String(s).replace(/[\\"]/g, "\\$&"); };
+      var q = 'releasegroup:"' + esc(rec.album) + '"' + (isVarious(rec.artist) ? "" : ' AND artist:"' + esc(rec.artist) + '"');
+      return fetch("https://musicbrainz.org/ws/2/release-group/?fmt=json&limit=5&query=" + encodeURIComponent(q))
+        .then(function (r) { if (!r.ok) throw r.status; return r.json(); })
+        .then(function (d) {
+          var g = (d["release-groups"] || []).filter(function (x) {
+            var credit = (x["artist-credit"] || []).map(function (c) { return (c.name || (c.artist || {}).name || "") + (c.joinphrase || ""); }).join("");
+            return (x.score || 0) >= 80 && sameTitle(x.title, rec.album) &&
+              (isVarious(rec.artist) || mentions(credit, rec.artist) || mentions(rec.artist, credit));
+          })[0];
+          return g ? "https://coverartarchive.org/release-group/" + g.id + "/front-500" : null;   // no art there = image error, next source
+        });
+    },
+    apple: function (rec) {
+      return new Promise(function (resolve, reject) {
+        var cb = "tsomtcApple" + (++appleN), s = document.createElement("script"), done = false;
+        function finish(v, err) {
+          if (done) return; done = true;
+          window[cb] = function () {}; s.remove();
+          if (err) reject(err); else resolve(v);
+        }
+        window[cb] = function (d) {
+          var hit = ((d && d.results) || []).filter(function (x) {
+            return x.artworkUrl100 && sameTitle(x.collectionName, rec.album) &&
+              (isVarious(rec.artist) || mentions(x.artistName, rec.artist) || mentions(rec.artist, x.artistName));
+          })[0];
+          finish(hit ? hit.artworkUrl100.replace(/\/\d+x\d+(bb)?\.(jpg|png|webp)$/i, "/600x600bb.jpg") : null);
+        };
+        s.src = "https://itunes.apple.com/search?media=music&entity=album&limit=10&term=" +
+          encodeURIComponent(rec.artist + " " + rec.album) + "&callback=" + cb;
+        s.onerror = function () { finish(null, "network"); };
+        setTimeout(function () { finish(null, "timeout"); }, 9000);
+        document.head.appendChild(s);
+      });
+    }
+  };
+  var webAsks = {};        // lookups already waiting, so a re-sort or the dig filter doesn't ask twice
+  function webCover(src, rec, el) {
+    if (!rec.album || /^podcast$/i.test(rec.album)) return Promise.resolve(null);
+    var key = src + "|" + rec.key, hit = webCache[key], now = Date.now();
+    if (hit && (hit.u || now - hit.t < 7 * 864e5)) return Promise.resolve(hit.u || null);
+    if (webAsks[key]) { webAsks[key].els.push(el); return webAsks[key].p; }
+    var ask = webAsks[key] = { els: [el] };
+    ask.p = webQueue(src, ask.els, function () { return WEB[src](rec); }).then(function (u) {
+      delete webAsks[key];
+      if (u === undefined) return null;                       // offline or blocked: don't remember a miss
+      webCache[key] = { u: u || "", t: Date.now() };
+      store("tsomtc.webCovers", webCache);
+      return u || null;
+    });
+    return ask.p;
   }
 
   var shelves = {};        // room full id -> the list from its album file
@@ -223,7 +348,7 @@
       artist: artist,
       album: album || "Untitled",
       type: a.type || "",
-      year: dk ? dk.slice(0, 4) : "",
+      year: yearRange(released) || (dk ? dk.slice(0, 4) : ""),       // "2020-2021" shows as a range (podcasts, series)
       dateKey: dk,
       artistKey: stripKey(a.sortAs || artist || album),
       titleKey: stripKey(album),
@@ -320,31 +445,130 @@
     return h("div", { class: "cover-fallback", "aria-hidden": "true" }, [rec.artist ? h("b", { text: rec.artist }) : null, h("i", { text: rec.album })]);
   }
 
+  /* ---------- the player: clicking a record pops Spotify's player out next to it,
+     so visitors stay on the site (like the mix-tape page). Same record again, ×, or Esc puts it away.
+     Ctrl/⌘-click or middle-click still opens the album on Spotify in a new tab. ---------- */
+  var player = null;
+  var EMBED_H = { album: 352, playlist: 352, show: 352, episode: 232, track: 152 };
+  function closePlayer() {
+    if (!player) return;
+    player.box.remove();
+    document.querySelectorAll(".record.is-playing").forEach(function (r) {
+      r.classList.remove("is-playing"); r.setAttribute("aria-expanded", "false");
+    });
+    window.removeEventListener("resize", placePlayer);
+    player = null;
+  }
+  function placePlayer() {
+    if (!player) return;
+    var el = player.rec;
+    if (!el.isConnected) {                       // the bins were re-sorted: follow the record to its new spot
+      var same = [].filter.call(document.querySelectorAll(".record[data-key]"), function (r) {
+        return r.getAttribute("data-key") === player.key && r.offsetParent !== null;
+      });
+      if (!same.length) return;                  // filtered out for now: leave the player where it is
+      el = player.rec = same.filter(function (r) { return !!r.closest(".picks") === player.inPicks; })[0] || same[0];
+      el.classList.add("is-playing"); el.setAttribute("aria-expanded", "true");
+    }
+    var box = player.box, r = el.getBoundingClientRect(), sleeve = el.querySelector(".sleeve").getBoundingClientRect();
+    var vw = document.documentElement.clientWidth, gap = 16, w = box.offsetWidth;
+    var left, top, side;
+    if (vw - r.right - gap >= w + 12) { side = "right"; left = r.right + gap; }
+    else if (r.left - gap >= w + 12) { side = "left"; left = r.left - gap - w; }
+    else { side = "below"; left = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), vw - w - 12); }
+    top = side === "below" ? r.bottom + 14 : Math.max(sleeve.top, stickyFloor() + 8);   // not under the sticky bars
+    box.setAttribute("data-side", side);
+    box.style.setProperty("--arrow", side === "below"
+      ? Math.round(Math.min(Math.max(r.left + r.width / 2 - left, 18), w - 18)) + "px"
+      : Math.round(Math.min(sleeve.height / 2, 120)) + "px");
+    box.style.left = Math.round(left + window.scrollX) + "px";
+    box.style.top = Math.round(top + window.scrollY) + "px";
+  }
+  function openPlayer(el, rec, label) {
+    if (player && player.rec === el) { closePlayer(); return; }    // same record again: put it back
+    closePlayer();
+    var ref = rec.spotify;
+    var close = h("button", { class: "player-close", type: "button", "aria-label": "Close the player", html: "&times;" });
+    var box = h("div", { class: "player", role: "dialog", "aria-label": "Player: " + label }, [
+      h("div", { class: "player-head" }, [
+        h("div", { class: "player-info" }, [
+          rec.artist ? h("strong", { text: rec.artist }) : null,
+          h("span", { text: rec.album }),
+          rec.year ? h("small", { text: rec.year }) : null
+        ]),
+        close
+      ]),
+      h("iframe", { class: "player-embed", title: "Spotify player: " + label,
+        src: "https://open.spotify.com/embed/" + ref.type + "/" + ref.id + "?utm_source=generator&theme=0",
+        height: EMBED_H[ref.type] || 352, frameborder: "0", loading: "lazy",
+        allow: "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" }),
+      h("a", { class: "player-out", href: ref.url, target: "_blank", rel: "noopener", text: "Open in Spotify ↗" })
+    ]);
+    close.addEventListener("click", function () { var r = player && player.rec; closePlayer(); if (r) r.focus({ preventScroll: true }); });
+    document.body.appendChild(box);
+    el.classList.add("is-playing"); el.setAttribute("aria-expanded", "true");
+    player = { box: box, rec: el, key: el.getAttribute("data-key"), inPicks: !!el.closest(".picks") };
+    placePlayer();
+    window.addEventListener("resize", placePlayer);
+    // bring it on screen if it opened past the bottom edge (or behind Currently Playing), never under the top bars
+    var bx = box.getBoundingClientRect(), floor = stickyFloor() + 8, bottom = window.innerHeight - 12;
+    var np = document.querySelector(".np");
+    if (np && !np.hidden) {
+      var nr = np.getBoundingClientRect();
+      if (nr.width && nr.left < bx.right && nr.right > bx.left) bottom = Math.min(bottom, nr.top - 12);
+    }
+    var dy = 0;
+    if (bx.bottom > bottom) dy = Math.min(bx.bottom - bottom, bx.top - floor);
+    else if (bx.top < floor) dy = bx.top - floor;
+    if (dy) window.scrollBy({ top: dy, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }
+  function stickyFloor() {                                  // bottom of whatever is stuck to the top of the screen
+    var f = 0;
+    document.querySelectorAll(".topbar, .crate-head").forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      if (getComputedStyle(el).position === "sticky" && r.top <= f + 1 && r.bottom > f) f = r.bottom;
+    });
+    return f;
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape" || !player) return;
+    var r = player.rec; closePlayer(); if (r && r.isConnected) r.focus({ preventScroll: true });
+  });
+
   function recordEl(rec, opts) {
     opts = opts || {};
     var hasLink = !!rec.link;
     var label = (rec.artist ? rec.artist + " — " : "") + rec.album + (rec.year ? " (" + rec.year + ")" : "");
     var el = h(hasLink ? "a" : "div", hasLink
-      ? { class: "record", href: rec.link, target: "_blank", rel: "noopener",
-          title: (/open\.spotify\.com/.test(rec.link) ? "Play on Spotify: " : "Play: ") + label,
-          "aria-label": "Play " + label }
+      ? { class: "record", href: rec.link, target: "_blank", rel: "noopener", "data-key": rec.key,
+          title: "Play: " + label, "aria-label": "Play " + label,
+          "aria-expanded": rec.spotify ? "false" : null }
       : { class: "record no-link", tabindex: "0", title: label + " — link coming soon", "aria-label": label + ", no link yet" });
+    if (rec.spotify) el.addEventListener("click", function (e) {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // let modified clicks open Spotify
+      e.preventDefault();
+      openPlayer(el, rec, label);
+    });
 
     var sleeve = h("div", { class: "sleeve" }, [h("span", { class: "disc", "aria-hidden": "true" }, [h("i")])]);
     // cover, in order: cover: "..." on the album's line; the album's Spotify cover;
-    // images/covers/Artist - Album.jpg (or .png); the Melodic Mosaic cover; a plain labelled sleeve
+    // images/covers/Artist - Album.jpg (or .png); the Melodic Mosaic cover; Wikipedia; MusicBrainz;
+    // Apple Music. The plain labelled sleeve sits underneath until one of them arrives (or for good).
     var tries = (rec.cover ? [rec.cover] : [])
       .concat(rec.spotify ? [{ spotify: rec.spotify }] : [])
       .concat(!rec.cover && rec.coverAuto ? [rec.coverAuto + ".jpg", rec.coverAuto + ".png"] : [])
-      .concat(rec.coverLib && rec.coverLib !== rec.cover ? [rec.coverLib] : []);
+      .concat(rec.coverLib && rec.coverLib !== rec.cover ? [rec.coverLib] : [])
+      .concat(WEB_SOURCES.map(function (s) { return { web: s }; }));
     if (tries.length) {
       var n = -1;
+      sleeve.appendChild(coverFallback(rec));
       var img = h("img", { class: "cover", alt: "", loading: "lazy", decoding: "async" });
       var next = function () {
         n++;
-        if (n >= tries.length) { if (img.parentNode) img.replaceWith(coverFallback(rec)); return; }
+        if (n >= tries.length) { img.remove(); return; }
         var t = tries[n];
         if (typeof t === "string") { img.src = safeSrc(t); return; }
+        if (t.web) { webCover(t.web, rec, sleeve).then(function (url) { if (url) img.src = url; else next(); }); return; }
         spotifyCover(t.spotify).then(function (url) {       // the 640 px image, then the 300 px one
           if (!url) return next();
           var big = spotifyBig(url);
@@ -353,6 +577,7 @@
         });
       };
       img.addEventListener("error", next);
+      img.addEventListener("load", function () { img.classList.add("loaded"); });   // fades in over the plain sleeve
       sleeve.appendChild(img);
       if (coverWatch) { sleeve._startCover = next; coverWatch.observe(sleeve); }
       else next();
@@ -442,7 +667,21 @@
     var check = fileCheck();
     if (check) dir.appendChild(check);
 
-    // the window display: staff picks before you walk into a room
+    var total = new Set(records.map(function (r) { return r.key; })).size;
+    document.getElementById("directory-stats").textContent =
+      plural(total, "record").replace(/^\d+/, function (n) { return Number(n).toLocaleString(); }) +
+      " across " + plural(SHOP.rooms.length, "room") + ". Pick a door.";
+
+    (SHOP.wings || [{ id: "floor", label: "The Floor" }]).forEach(function (w) {
+      var rooms = SHOP.rooms.filter(function (r) { return (r.wing || "floor") === w.id; });
+      if (!rooms.length) return;
+      dir.appendChild(h("section", { class: "wing", "aria-labelledby": "wing-" + w.id }, [
+        h("div", { class: "wing-head" }, [h("h2", { id: "wing-" + w.id, text: w.label }), w.note ? h("span", { text: w.note }) : null]),
+        h("div", { class: "rooms" }, rooms.map(function (r) { return roomCard(r, "h3"); }))
+      ]));
+    });
+
+    // house Staff Picks (js/staff-picks.js -> window): at the bottom, below the rooms
     var win = windowPicks();
     if (win.length) {
       var perRow = win.length <= 6 ? win.length : Math.ceil(win.length / 2);
@@ -451,7 +690,7 @@
       var block = h("section", { class: "block picks window-picks", "aria-labelledby": "window-h" }, [
         h("div", { class: "block-head" }, [
           h("h2", { id: "window-h", class: "tag", text: "Staff Picks" }),
-          h("span", { class: "sub", text: "In the window" })
+          h("span", { class: "sub", text: "From across the rooms" })
         ])
       ]);
       rows.forEach(function (row) {
@@ -466,19 +705,6 @@
       });
       dir.appendChild(block);
     }
-    var total = new Set(records.map(function (r) { return r.key; })).size;
-    document.getElementById("directory-stats").textContent =
-      plural(total, "record").replace(/^\d+/, function (n) { return Number(n).toLocaleString(); }) +
-      " across " + plural(SHOP.rooms.length, "room") + ". Pick a door.";
-
-    (SHOP.wings || [{ id: "floor", label: "The Floor" }]).forEach(function (w) {
-      var rooms = SHOP.rooms.filter(function (r) { return (r.wing || "floor") === w.id; });
-      if (!rooms.length) return;
-      dir.appendChild(h("section", { class: "wing", "aria-labelledby": "wing-" + w.id }, [
-        h("div", { class: "wing-head" }, [h("h2", { id: "wing-" + w.id, text: w.label }), w.note ? h("span", { text: w.note }) : null]),
-        h("div", { class: "rooms" }, rooms.map(function (r) { return roomCard(r, "h3"); }))
-      ]));
-    });
   }
 
   /* =========================================================
@@ -496,8 +722,8 @@
       document.title = "Wrong turn — " + SHOP.name;
       main.appendChild(h("div", { class: "wrap", style: "padding:120px 0;text-align:center" }, [
         h("h1", { class: "neon", style: "font-size:40px", text: "Wrong turn" }),
-        h("p", { style: "color:var(--muted);margin:14px 0 24px", text: id ? 'There\'s no room called "' + id + '" in this shop.' : "No room picked." }),
-        h("a", { class: "pill-link", href: "index.html#directory", text: "Back to the Store Directory" })
+        h("p", { style: "color:var(--muted);margin:14px 0 24px", text: id ? 'There\'s no room called "' + id + '" here.' : "No room picked." }),
+        h("a", { class: "pill-link", href: "index.html#directory", text: "Back to the Directory" })
       ]));
       return;
     }
@@ -659,6 +885,7 @@
         frag.appendChild(el);
       });
       grid.appendChild(frag);
+      if (player) placePlayer();                 // keep an open player beside its record after a re-sort
     }
 
     sync();
