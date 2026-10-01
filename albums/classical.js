@@ -37,7 +37,7 @@ shelf([
   { artist: "Johann Sebastian Bach, Glenn Gould", album: "The Goldberg Variations", released: "1956", spotify: "https://open.spotify.com/album/3Np4iJqYwS3n3IvvsnUwWB" },
   { artist: "Ludwig van Beethoven, Wiener Philharmoniker, Carlos Kleiber", album: "Symphonies Nos. 5 & 7", released: "1995", spotify: "https://open.spotify.com/album/6eOuqhCfrTPp1H0YbQ9PmL" },
   { artist: "Pyotr Ilyich Tchaikovsky, Leningrad Philharmonic Orchestra, Evgeny Mravinsky", album: "Symphonies Nos. 4, 5 & 6 “Pathétique”", released: "1961", spotify: "https://open.spotify.com/album/1h5YKmhPGrRiB2WaO7TOaK" },
-  { artist: "Richard Wagner, Sir Georg Solti", album: "Der Ring des Nibelungen", released: "1997", spotify: "https://open.spotify.com/album/0S9Qlb37K5Z9IB0qXIsDCQ", pick: true },
+  { artist: "Richard Wagner, Sir Georg Solti", album: "Der Ring des Nibelungen", released: "1997", spotify: "https://open.spotify.com/album/0S9Qlb37K5Z9IB0qXIsDCQ" },
   { artist: "Richard Wagner, Wilhelm Furtwängler, Kirsten Flagstad, Ludwig Suthaus, Philharmonia Orchestra", album: "Tristan Und Isolde", released: "1952", spotify: "https://open.spotify.com/album/37bL5BfzehXOyG8RhN8Li2" },
   { artist: "Maurice Ravel, Hector Berlioz, Debussy, Poulenc", album: "Shéhérazade / Les nuits d'été", released: "1964", spotify: "https://open.spotify.com/album/1wAQtboQtay46yY4BwV0z0" },
 

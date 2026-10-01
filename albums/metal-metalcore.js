@@ -27,6 +27,29 @@
 
 shelf([
 
+  { artist: "All That Remains", album: "This Darkened Heart", released: "2004", spotify: "" },
+  { artist: "As I Lay Dying", album: "Frail Words Collapse", released: "2003", spotify: "" },
+  { artist: "Atreyu", album: "The Curse", released: "2004", spotify: "" },
+  { artist: "Avenged Sevenfold", album: "Waking the Fallen", released: "2003", spotify: "" },
+  { artist: "Between the Buried and Me", album: "Colors", released: "2007", spotify: "" },
+  { artist: "Botch", album: "We Are the Romans", released: "1999", spotify: "" },
+  { artist: "Bullet for My Valentine", album: "The Poison", released: "2005", spotify: "https://open.spotify.com/album/7zU9hmH9CKQ9Yf5SruqOLM" },
+  { artist: "Code Orange", album: "Underneath", released: "2020", spotify: "https://open.spotify.com/album/7cbeno84CZdxj4USU23gjm" },
+  { artist: "Converge", album: "Jane Doe", released: "2001", spotify: "" },
+  { artist: "Earth Crisis", album: "Destroy the Machines", released: "1995", spotify: "" },
+  { artist: "Hatebreed", album: "Perseverance", released: "2002", spotify: "" },
+  { artist: "Killswitch Engage", album: "Alive or Just Breathing", released: "2002", spotify: "" },
+  { artist: "Killswitch Engage", album: "The End of Heartache", released: "2004", spotify: "" },
+  { artist: "Knocked Loose", album: "You Won't Go Before You're Supposed To", released: "2024", spotify: "" },
+  { artist: "Overcast", album: "Reborn to Kill Again", released: "2008", spotify: "" },
+  { artist: "Poison the Well", album: "Tear from the Red", released: "2002", spotify: "" },
+  { artist: "Shadows Fall", album: "The Art of Balance", released: "2002", spotify: "" },
+  { artist: "Shai Hulud", album: "Hearts Once Nourished with Hope and Compassion", released: "1997", spotify: "" },
+  { artist: "The Devil Wears Prada", album: "Zombie", released: "2010", spotify: "" },
+  { artist: "The Dillinger Escape Plan", album: "Miss Machine", released: "2004", spotify: "" },
+  { artist: "Trivium", album: "Ascendancy", released: "2005", spotify: "" },
+  { artist: "Will Haven", album: "El Diablo", released: "1997", spotify: "" },
+
   { artist: "", album: "", released: "", spotify: "" },
 
 ]);

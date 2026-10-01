@@ -26,6 +26,14 @@
 */
 
 shelf([
+  /* Podcasts: put the show name in artist, "Podcast" in album, and the years it ran in released
+     ("2020-2021" shows as 2020–2021). A Spotify show or episode link works too:
+     spotify: "https://open.spotify.com/show/XXXXXXXXXXXXXXXXXXXXXX" */
+
+  { artist: "Bela Lugosi", album: "Suspense (An Original Radio Broadcast)", released: "1973", spotify: "" },
+  { artist: "Mary Shelley, Robert Louis Stevenson, Bram Stoker", album: "The Great Radio Horror Shows (feat. Boris Karloff, Bela Lugosi)", released: "1975", spotify: "" },
+  { artist: "Parkdale Haunt", album: "Podcast", released: "2020-2021", spotify: "" },
+  { artist: "Rue Morgue Radio", album: "Podcast", released: "2005-2012", spotify: "" },
 
   { artist: "", album: "", released: "", spotify: "" },
 

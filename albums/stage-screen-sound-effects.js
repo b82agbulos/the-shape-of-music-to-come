@@ -27,6 +27,9 @@
 
 shelf([
 
+  { artist: "Mike Harding", album: "BBC Sound Effects No. 13 - Death & Horror", released: "1977", spotify: "" },
+  { artist: "Mike Harding", album: "Even More Death And Horror", released: "1982", spotify: "" },
+
   { artist: "", album: "", released: "", spotify: "" },
 
 ]);
