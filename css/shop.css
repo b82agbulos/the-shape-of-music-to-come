@@ -293,7 +293,7 @@ button, input { font: inherit; color: inherit; }
 .pick:nth-child(even) .talker { transform: rotate(1.3deg); }
 
 /* the window display on the Store Directory */
-.window-picks { margin: 0 0 56px; }
+.window-picks { margin: 56px 0 24px; }   /* sits below the rooms */
 .window-picks .block-head .sub { color: var(--muted); font-size: 14px; }
 .window-picks .plank { margin-bottom: 30px; border-radius: 0; }
 .window-picks .plank:last-child { margin-bottom: 0; border-radius: 0 0 12px 12px; }
@@ -383,6 +383,8 @@ button, input { font: inherit; color: inherit; }
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 6px 14px rgba(0, 0, 0, 0.55);
   transition: box-shadow 0.32s var(--ease);
 }
+img.cover { opacity: 0; transition: opacity 0.3s ease, box-shadow 0.32s var(--ease); }   /* shown once it has loaded, over the plain sleeve */
+img.cover.loaded { opacity: 1; }
 .cover-fallback {
   display: flex; flex-direction: column; justify-content: flex-end; gap: 4px;
   padding: 12px; font-size: 13px; line-height: 1.25;
@@ -476,6 +478,49 @@ button, input { font: inherit; color: inherit; }
 .walk .next { text-align: right; grid-column: 2; }
 
 .site-foot { text-align: center; color: var(--faint); font-size: 13px; padding: 30px var(--gutter) 10px; }
+
+/* ---------- the player that pops out next to a record ---------- */
+.player {
+  position: absolute; z-index: 15;            /* above the records, under the sticky bars when scrolling */
+  width: min(320px, calc(100vw - 24px));
+  padding: 12px; border-radius: 14px;
+  background: #1c1512; border: 1px solid var(--line-2);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(244, 176, 72, 0.18);
+  animation: player-in 0.22s var(--ease);
+}
+.player::before {                              /* the little pointer toward the record */
+  content: ""; position: absolute; width: 14px; height: 14px; background: #1c1512;
+  border-left: 1px solid var(--line-2); border-top: 1px solid var(--line-2);
+}
+.player[data-side="right"]::before { left: -8px; top: var(--arrow, 40px); transform: translateY(-50%) rotate(-45deg); }
+.player[data-side="left"]::before  { right: -8px; top: var(--arrow, 40px); transform: translateY(-50%) rotate(135deg); }
+.player[data-side="below"]::before { top: -8px; left: var(--arrow, 50%); transform: translateX(-50%) rotate(45deg); }
+.player-head { display: flex; align-items: flex-start; gap: 10px; }
+.player-info { display: grid; min-width: 0; flex: 1; line-height: 1.3; }
+.player-info strong { font-size: 14px; font-weight: 650; }
+.player-info span { font-size: 13.5px; color: var(--text); }
+.player-info small { font-size: 12px; color: var(--muted); }
+.player-close {
+  flex: none; width: 28px; height: 28px; border: 0; border-radius: 50%; cursor: pointer;
+  background: rgba(255, 255, 255, 0.06); color: var(--muted); font-size: 18px; line-height: 1;
+}
+.player-close:hover, .player-close:focus-visible { color: var(--text); background: rgba(255, 255, 255, 0.12); }
+.player-embed { display: block; width: 100%; margin-top: 10px; border: 0; border-radius: 12px; background: #282828; }
+.player-out { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--muted); text-decoration: none; }
+.player-out:hover { color: var(--text); }
+@keyframes player-in { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+/* the record that's playing stays pulled out of the sleeve */
+.record.is-playing { z-index: 5; }
+.record.is-playing .sleeve { transform: translateY(-20px); }
+.record.is-playing .disc {
+  transform: translateY(-50%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 -6px 22px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.record.is-playing .play { opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .record.is-playing .disc i { animation: spin 1.8s linear infinite; }
+}
 
 /* ---------- Currently Playing ---------- */
 .np {
