@@ -350,7 +350,7 @@
       type: a.type || "",
       year: yearRange(released) || (dk ? dk.slice(0, 4) : ""),       // "2020-2021" shows as a range (podcasts, series)
       dateKey: dk,
-      artistKey: stripKey(a.sortAs || artist || album),
+      artistKey: stripKey(a.sortAs || (isVarious(artist) ? album : artist) || album),   // compilations file under their title
       titleKey: stripKey(album),
       sections: roomId ? [roomId] : [],
       spotify: spotifyRef(a.spotify),
