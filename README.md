@@ -149,10 +149,18 @@ the file; F12 → Console gives the line number. One broken file never affects t
 ## 3. How a room is laid out
 
 The Directory only shows the main rooms. Sections stay out of sight until you walk into a room.
+Every "Directory" link (top bar, breadcrumbs) lands on the Directory itself, not the storefront picture above it.
+
+**Ask the Staff** (top of the Directory) searches every room at once: an artist, an album, a year, or a mix
+("bowie 1977"). Capitals, accents and punctuation don't matter. Each result plays like any other record and says
+"Find it in …" with a link to its room. The search is kept in the address (`index.html?ask=lauryn+hill`), so Back
+from a room brings the results back, and a search can be shared as a link.
 
 1. The room scene (your 1920×1080 picture) and its neon sign
 2. **Sections**: the sub-rooms, as doorways (only on rooms that have them)
-3. **Staff Picks**: on a shelf, with shelf-talkers
+3. **Staff Picks**: on a shelf, with shelf-talkers. A main room also shows its sections' picks (Neo Soul's in
+   R&B / Soul / Funk, Conscious Hip Hop's in Hip Hop), each marked "Find it in" its section. The Directory's own
+   Staff Picks display is only the `window` list in `js/staff-picks.js`.
 4. **The bins**: the room's own records, i.e. the ones filed to that room and not to one of its sub-rooms
 5. Previous room / Next room, following the Directory order
 
@@ -162,10 +170,12 @@ The Directory only shows the main rooms. Sections stay out of sight until you wa
 - **Artist · Release date**: artists A→Z, each artist's catalogue in release order.
 - **Release date**: the whole room chronologically, divided by decade.
 
-The last two have an Oldest first / Newest first toggle. Leading "The", "A", "An" and punctuation are
+The last two have an Oldest first / Newest first toggle. "Various Artists" compilations are filed under their title, the way soundtrack bins are. Leading "The", "A", "An" and punctuation are
 ignored for filing (The Clash under C, "...And Justice for All" under A), accents are ignored (Björk under B).
 Letter or decade divider cards stick up behind the first record of each group, like a real bin.
-Rooms with more than 12 records also get a "Dig through this crate" filter.
+Every room has a "Dig through this crate" box. It filters the room's records, and anything that matches
+elsewhere in the shop shows underneath under Ask the Staff, with "Find it in …" (dig for Lauryn Hill in Hip Hop
+and it points you to Neo Soul). A room that is only sections, like Stage & Screen, gets the Ask the Staff box instead.
 
 ---
 
@@ -207,5 +217,5 @@ Names are shown exactly as Last.fm has them (the Melodic Mosaic version title-ca
 4. It'll be at `https://b82agbulos.github.io/the-shape-of-music-to-come/`.
 
 **Phones showing an old look after an update?** Browsers keep old copies of `css/shop.css` and the `js/`
-files. `index.html` and `room.html` load them as `shop.css?v=20260930f` etc.; whenever a new `css/` or `js/`
+files. `index.html` and `room.html` load them as `shop.css?v=20261002a` etc.; whenever a new `css/` or `js/`
 file goes up, change that `v=` value in both pages (any new text works) and every browser fetches the new one.
