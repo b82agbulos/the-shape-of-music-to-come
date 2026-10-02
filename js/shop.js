@@ -405,6 +405,92 @@
   }
   function isPick(rec) { return rec.pick; }
 
+  /* ---------- Ask the Staff: search every room in the shop ---------- */
+  // accents, capitals, punctuation and "&"/"and" don't matter: "bjork" finds Björk, "ac dc" finds AC/DC
+  function fold(s) {
+    return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+      .replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
+  }
+  function words(q) { return fold(q).split(" ").filter(Boolean); }
+  function hay(rec) {
+    if (rec._hay == null) rec._hay = " " + fold([rec.artist, rec.album, rec.year, rec.type].join(" ")) + " ";
+    return rec._hay;
+  }
+  function matches(rec, w) { var s = hay(rec); return w.every(function (x) { return s.indexOf(x) > -1; }); }
+
+  var stock = null;           // one entry per album (artist + title + year), with every room it's filed in
+  function stockList() {
+    if (stock) return stock;
+    var byKey = new Map();
+    stock = [];
+    records.forEach(function (r) {
+      var k = r.key + "|" + r.year, e = byKey.get(k);
+      if (!e) { e = { rec: r, rooms: [] }; byKey.set(k, e); stock.push(e); }
+      if (!e.rec.link && r.link) e.rec = r;                     // the copy with a link is the one that plays
+      r.sections.forEach(function (s) { if (e.rooms.indexOf(s) < 0) e.rooms.push(s); });
+    });
+    return stock;
+  }
+  // best matches first: the artist you typed, then the title, then names that start with it
+  function askStaff(q) {
+    var w = words(q);
+    if (!w.length) return [];
+    var whole = w.join(" "), bare = function (s) { return s.replace(/^(the|a|an) /, ""); };
+    return stockList().filter(function (e) { return matches(e.rec, w); }).map(function (e) {
+      var a = fold(e.rec.artist), t = fold(e.rec.album);
+      var score = (a === whole || bare(a) === whole) ? 0 : (t === whole || bare(t) === whole) ? 1
+        : (a.indexOf(whole) === 0 || bare(a).indexOf(whole) === 0) ? 2
+        : (t.indexOf(whole) === 0 || bare(t).indexOf(whole) === 0) ? 3
+        : w.every(function (x) { return hay(e.rec).indexOf(" " + x) > -1; }) ? 4 : 5;
+      return { e: e, score: score };
+    }).sort(function (x, y) {
+      return x.score - y.score || SORTS.artist.cmp(x.e.rec, y.e.rec, 1);
+    }).map(function (x) { return x.e; });
+  }
+  // a room's name, with its main room in front when another room has the same name
+  // ("Halloween › Spoken Word" vs "Stage & Screen › Spoken Word")
+  function roomLabel(r) {
+    var twins = order.filter(function (o) { return o.name === r.name; }).length > 1;
+    return twins && r.parent ? trail(r)[0].name + " › " + r.name : r.name;
+  }
+  function findItIn(ids) {
+    var rooms = ids.map(function (id) { return byId.get(id); }).filter(Boolean);
+    if (!rooms.length) return null;
+    var kids = ["Find it in "];
+    rooms.forEach(function (r, i) {
+      if (i) kids.push(" · ");
+      kids.push(h("a", { href: roomHref(r), text: roomLabel(r) }));
+    });
+    kids.push(" →");
+    return h("p", { class: "window-room" }, kids);
+  }
+  // the staff's answer: records from anywhere in the shop, each with where to find it.
+  // opts.exclude: this room (its own records are already in its crate); opts.limit: how many before "Show all"
+  function staffAnswer(q, opts) {
+    opts = opts || {};
+    var found = askStaff(q).map(function (e) {
+      return { rec: e.rec, rooms: e.rooms.filter(function (id) { return id !== opts.exclude; }) };
+    }).filter(function (x) { return x.rooms.length; });
+    if (!found.length) return null;
+    var limit = opts.limit || 48;
+    var box = h("div", { class: "ask-found" });
+    function fill(n) {
+      box.innerHTML = "";
+      box.appendChild(h("p", { class: "ask-count", text: plural(found.length, "record").replace(/^\d+/, function (d) { return Number(d).toLocaleString(); }) +
+        (opts.exclude ? " elsewhere in the shop" : " in the shop") }));
+      box.appendChild(h("div", { class: "ask-grid" }, found.slice(0, n).map(function (x) {
+        return h("div", { class: "result" }, [recordEl(x.rec), findItIn(x.rooms)]);
+      })));
+      if (found.length > n) {
+        box.appendChild(h("button", { type: "button", class: "pill-link ask-more", text: "Show all " + found.length.toLocaleString(),
+          onclick: function () { fill(found.length); } }));
+      }
+      if (player) placePlayer();
+    }
+    fill(limit);
+    return box;
+  }
+
   /* ---------- sorting ---------- */
   function cmpDate(a, b, dir) {
     if (a.dateKey === b.dateKey) return 0;
@@ -623,6 +709,38 @@
     ]);
   }
 
+  // the Ask the Staff box: type an artist, an album or a year, and the staff point you to the room
+  function askBlock(opts) {
+    opts = opts || {};
+    var id = opts.id || "ask-h";
+    var input = h("input", { class: "ask-input", type: "search", placeholder: "An artist, an album, a year…",
+      "aria-label": "Ask the staff: search every room in the shop", autocomplete: "off", spellcheck: "false", enterkeyhint: "search" });
+    var out = h("div", { class: "ask-out", "aria-live": "polite" });
+    var timer = null;
+    function run() {
+      clearTimeout(timer);
+      var q = input.value.trim();
+      out.innerHTML = "";
+      if (q) {
+        out.appendChild(staffAnswer(q, { exclude: opts.exclude, limit: opts.limit }) ||
+          h("p", { class: "ask-none" }, [h("strong", { text: "Not in stock." }), "Nothing in the shop goes by that name. Try another spelling."]));
+      }
+      if (opts.onQuery) opts.onQuery(q);
+    }
+    input.addEventListener("input", function () { clearTimeout(timer); timer = setTimeout(run, 160); });
+    input.addEventListener("search", run);                               // the clear (×) button
+    var form = h("form", { class: "ask-bar", onsubmit: function (e) { e.preventDefault(); run(); input.blur(); } }, [input]);
+    var block = h("section", { class: "ask", role: "search", "aria-labelledby": id }, [
+      h("div", { class: "block-head" }, [
+        h("h2", { id: id, class: "tag", text: "Ask the Staff" }),
+        h("span", { class: "sub", text: opts.sub || "Looking for something? We'll tell you which room it's in." })
+      ]),
+      form, out
+    ]);
+    block.ask = function (q) { input.value = q; run(); };
+    return block;
+  }
+
   /* =========================================================
      STOREFRONT
      ========================================================= */
@@ -672,6 +790,18 @@
       plural(total, "record").replace(/^\d+/, function (n) { return Number(n).toLocaleString(); }) +
       " across " + plural(SHOP.rooms.length, "room") + ". Pick a door.";
 
+    // Ask the Staff: the search is kept in the address (?ask=...), so Back from a room brings it back
+    var asked = new URLSearchParams(location.search).get("ask") || "";
+    var ask = askBlock({ onQuery: function (q) {
+      try {
+        var u = new URL(location.href);
+        if (q) u.searchParams.set("ask", q); else u.searchParams.delete("ask");
+        history.replaceState(null, "", u.pathname + u.search + u.hash);
+      } catch (e) {}
+    } });
+    dir.appendChild(ask);
+    if (asked) ask.ask(asked);
+
     (SHOP.wings || [{ id: "floor", label: "The Floor" }]).forEach(function (w) {
       var rooms = SHOP.rooms.filter(function (r) { return (r.wing || "floor") === w.id; });
       if (!rooms.length) return;
@@ -698,7 +828,7 @@
           return h("div", { class: "pick" }, [
             recordEl(w.rec),
             w.rec.note ? h("p", { class: "talker", text: w.rec.note }) : null,
-            w.room ? h("a", { class: "window-room", href: roomHref(w.room), text: "Find it in " + w.room.name + " →" }) : null
+            w.room ? findItIn([w.room.fullId]) : null
           ]);
         })));
         block.appendChild(h("div", { class: "plank", "aria-hidden": "true" }));
@@ -777,14 +907,24 @@
       ]));
     }
 
-    // 2) staff picks for this room
-    var picks = own.filter(function (r) { return isPick(r); })
-      .sort(function (a, b) { return SORTS.artist.cmp(a, b, 1); });
+    // 2) staff picks for this room, plus the picks in its sections (Neo Soul's show in R&B / Soul / Funk too)
+    var below = [];
+    (function walk(r) { r.subs.forEach(function (s) { below.push(s.fullId); walk(s); }); })(room);
+    var pickSeen = {}, picks = [];
+    own.concat(records.filter(function (r) { return r.sections.some(function (s) { return below.indexOf(s) > -1; }); }))
+      .forEach(function (rec) {
+        var k = rec.key + "|" + rec.year;
+        if (!isPick(rec) || pickSeen[k]) return;
+        pickSeen[k] = true;
+        picks.push(rec);
+      });
+    picks.sort(function (a, b) { return SORTS.artist.cmp(a, b, 1); });
     if (picks.length) {
       var shelf = h("div", { class: "shelf" }, picks.map(function (rec) {
         var el = recordEl(rec);
         el.classList.add("pick-record");
-        return h("div", { class: "pick" }, [el, rec.note ? h("p", { class: "talker", text: rec.note }) : null]);
+        var from = rec.sections[0] !== room.fullId ? findItIn([rec.sections[0]]) : null;
+        return h("div", { class: "pick" }, [el, rec.note ? h("p", { class: "talker", text: rec.note }) : null, from]);
       }));
       body.appendChild(h("section", { class: "block picks", "aria-labelledby": "picks-h" }, [
         h("div", { class: "block-head" }, [h("h2", { id: "picks-h", class: "tag", text: "Staff Picks" })]),
@@ -793,8 +933,9 @@
       ]));
     }
 
-    // 3) the room's own bins (records not filed in a sub-room)
+    // 3) the room's own bins (records not filed in a sub-room); a room that is only sections gets the search box
     if (own.length || !room.subs.length) body.appendChild(crateBlock(room, own));
+    else body.appendChild(h("div", { class: "block" }, [askBlock({ exclude: room.fullId })]));
 
     // walk to neighbouring rooms
     var idx = order.indexOf(room);
@@ -830,19 +971,23 @@
         return b;
       }));
     var dirBtn = h("button", { type: "button", class: "dir-btn", onclick: function () { state.dir *= -1; sync(); } });
-    var dig = h("input", { class: "dig", type: "search", placeholder: "Dig through this crate…", "aria-label": "Filter records in this room",
-      oninput: function () { state.q = dig.value.trim().toLowerCase(); draw(); } });
+    var digTimer = null;
+    var dig = h("input", { class: "dig", type: "search", placeholder: "Dig through this crate…", autocomplete: "off", spellcheck: "false",
+      "aria-label": "Search this room; matches in other rooms are listed under the crate",
+      oninput: function () { state.q = dig.value.trim(); clearTimeout(digTimer); digTimer = setTimeout(draw, 120); } });
     var grid = h("div", { class: "crate", id: "crate" });
+    var away = h("div", { class: "elsewhere", "aria-live": "polite" });     // Ask the Staff: the same search, other rooms
 
     section.appendChild(h("div", { class: "crate-head" }, [
       h("h2", { id: "crate-h" }, [heading, count]),
-      own.length > 1 ? seg : null, own.length > 1 ? dirBtn : null, own.length > 12 ? dig : null
+      own.length > 1 ? seg : null, own.length > 1 ? dirBtn : null, own.length ? dig : null
     ]));
     if (room.subs.length) {
       section.appendChild(h("p", { style: "color:var(--faint);font-size:14px;margin:-8px 0 12px",
         text: "Filed under " + room.name + " but not in one of its sections." }));
     }
     section.appendChild(grid);
+    section.appendChild(away);
 
     function sync() {
       store("tsomtc.sort", { mode: state.mode, dir: state.dir });
@@ -855,20 +1000,29 @@
 
     function draw() {
       grid.innerHTML = "";
+      away.innerHTML = "";
+      var elsewhere = state.q ? staffAnswer(state.q, { exclude: room.fullId, limit: 12 }) : null;
+      if (elsewhere) {
+        away.appendChild(h("div", { class: "block-head" }, [
+          h("h3", { class: "tag", text: "Ask the Staff" }),
+          h("span", { class: "sub", text: "Found outside " + room.name })
+        ]));
+        away.appendChild(elsewhere);
+      }
       if (!own.length) {
         grid.appendChild(h("div", { class: "empty" }, [h("strong", { text: "Still stocking this one." }), "New arrivals are on the way."]));
         count.textContent = "";
         return;
       }
-      var s = SORTS[state.mode];
-      var list = own.filter(function (r) {
-        if (!state.q) return true;
-        return (r.artist + " " + r.album + " " + r.year + " " + r.type).toLowerCase().indexOf(state.q) > -1;
-      }).sort(function (a, b) { return s.cmp(a, b, state.dir) || a.i - b.i; });
+      var s = SORTS[state.mode], w = words(state.q);
+      var list = own.filter(function (r) { return !w.length || matches(r, w); })
+        .sort(function (a, b) { return s.cmp(a, b, state.dir) || a.i - b.i; });
 
-      count.textContent = state.q ? list.length + " of " + own.length : String(own.length);
+      count.textContent = w.length ? list.length + " of " + own.length : String(own.length);
       if (!list.length) {
-        grid.appendChild(h("div", { class: "empty" }, [h("strong", { text: "Nothing in here by that name." }), "Try another dig."]));
+        grid.appendChild(h("div", { class: "empty" }, elsewhere
+          ? [h("strong", { text: "Not in this crate." }), "But the staff found it elsewhere in the shop, just below."]
+          : [h("strong", { text: "Nothing in the shop by that name." }), "Try another dig."]));
         return;
       }
       var frag = document.createDocumentFragment();
@@ -910,11 +1064,22 @@
     document.head.appendChild(el);
   });
 
+  var moved = false;                       // the visitor scrolled while the albums were loading: leave them be
+  ["wheel", "touchmove", "keydown"].forEach(function (ev) {
+    window.addEventListener(ev, function () { moved = true; }, { once: true, passive: true });
+  });
+
   function done() {
     if (--pending) return;
     buildRecords();
-    if (page === "storefront") renderStorefront();
-    else if (page === "room") renderRoom();
+    if (page === "storefront") {
+      renderStorefront();
+      var target = new URLSearchParams(location.search).get("ask") ? document.querySelector(".ask")
+        : location.hash === "#directory" ? document.getElementById("directory") : null;
+      if (target && !moved) window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - (target.id ? 0 : 24), behavior: "instant" });
+    }
+    if (page === "room") renderRoom();
+    requestAnimationFrame(function () { document.documentElement.classList.add("smooth"); });
     window.TSOMTC = { rooms: byId, records: records };   // for poking at in the console (F12)
   }
 })();
