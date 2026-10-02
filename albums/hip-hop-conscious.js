@@ -63,7 +63,7 @@ shelf([
   { artist: "Little Simz", album: "Grey Area", released: "2019", spotify: "https://open.spotify.com/album/3Z8Df4ghTJ7afEWkurB2I1" },
   { artist: "Little Simz", album: "Sometimes I Might Be Introvert", released: "2021", spotify: "https://open.spotify.com/album/4xCbgnq65GRQKSAkH1RExU" },
   { artist: "McKinley Dixon", album: "Magic, Alive!", released: "2025", spotify: "https://open.spotify.com/album/0RXsRwX4iMCKkSFPoSs8Go" },
-  { artist: "Mos Def", album: "Black on Both Sides", released: "1999", spotify: "https://open.spotify.com/album/5gK2l2LgWY0BA4p9uy27z6" },
+  { artist: "Mos Def", album: "Black on Both Sides", released: "1999", spotify: "https://open.spotify.com/album/5gK2l2LgWY0BA4p9uy27z6", pick: true },
   { artist: "Mos Def", album: "The Ecstatic", released: "2009", spotify: "https://open.spotify.com/album/37qGR8VdXH0Gol5Ud4UabK" },
   { artist: "Mr. Lif", album: "I Phantom", released: "2002", spotify: "https://open.spotify.com/album/0KfDy2vVRvScvPpzvXbQbz" },
   { artist: "Noname", album: "Room 25", released: "2018", spotify: "https://open.spotify.com/album/7oHM3Sj0l2nXAzGAxW0KOt" },

@@ -207,7 +207,7 @@ shelf([
   { artist: "The Smiths", album: "Strangeways, Here We Come", released: "1987", spotify: "https://open.spotify.com/album/7jfexk2w5aDI25njkN0UGg" },
   { artist: "The Smiths", album: "The Queen Is Dead", released: "1986", spotify: "https://open.spotify.com/album/5Y0p2XCgRRIjna91aQE8q7" },
   { artist: "The Stone Roses", album: "The Stone Roses", released: "1989", spotify: "https://open.spotify.com/album/0um9FI6BLBldL5POP4D4Cw" },
-  { artist: "The Strokes", album: "Is This It", released: "2001", spotify: "https://open.spotify.com/album/2k8KgmDp9oHrmu0MIj4XDE" },
+  { artist: "The Strokes", album: "Is This It", released: "2001", spotify: "https://open.spotify.com/album/2k8KgmDp9oHrmu0MIj4XDE", pick: true },
   { artist: "The Strokes", album: "Room on Fire", released: "2003", spotify: "https://open.spotify.com/album/3HFbH1loOUbqCyPsLuHLLh" },
   { artist: "The Triffids", album: "Born Sandy Devotional", released: "1986", spotify: "" },
   { artist: "The Unicorns", album: "Who Will Cut Our Hair When We're Gone?", released: "2003", spotify: "" },

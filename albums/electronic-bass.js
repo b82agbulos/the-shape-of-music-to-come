@@ -27,13 +27,13 @@
 
 shelf([
 
-  { artist: "Amon Tobin", album: "Permutation", released: "1998", spotify: "https://open.spotify.com/album/7jxs0XY2yJS36PZCjUv4Hp" },
-  { artist: "Burial", album: "Untrue", released: "2007", spotify: "https://open.spotify.com/album/1C30LhZB9I48LdpVCRRYvq" },
+  { artist: "Amon Tobin", album: "Permutation", released: "1998", spotify: "https://open.spotify.com/album/7jxs0XY2yJS36PZCjUv4Hp", pick: true },
+  { artist: "Burial", album: "Untrue", released: "2007", spotify: "https://open.spotify.com/album/1C30LhZB9I48LdpVCRRYvq", pick: true },
   { artist: "DJ/rupture", album: "Uproot", released: "2008", spotify: "" },
   { artist: "James Blake", album: "CMYK", released: "2010", spotify: "https://open.spotify.com/album/0LSInSSnuRkl4G6cQ14dFB", type: "EP" },
   { artist: "James Blake", album: "Klavierwerke", released: "2010", spotify: "https://open.spotify.com/album/3IP1sBzXWf7qEq85o2ztJC", type: "EP" },
   { artist: "James Blake", album: "The Bells Sketch", released: "2010", spotify: "https://open.spotify.com/album/3zP81wPe9curAYsIdrWjgl", type: "EP" },
-  { artist: "Roni Size & Reprazent", album: "New Forms", released: "1997", spotify: "https://open.spotify.com/album/2wa0kOg4mJ94Iw17Gcv4IL" },
+  { artist: "Roni Size & Reprazent", album: "New Forms", released: "1997", spotify: "https://open.spotify.com/album/2wa0kOg4mJ94Iw17Gcv4IL", pick: true },
   { artist: "Skrillex", album: "Bangarang", released: "2011", spotify: "https://open.spotify.com/album/5XJ2NeBxZP3HFM8VoBQEUe", type: "EP" },
   { artist: "Squarepusher", album: "Big Loada", released: "1997", spotify: "https://open.spotify.com/album/0QnctTeHdyQqYptrzGnAmS" },
   { artist: "TNGHT", album: "TNGHT", released: "2012", spotify: "https://open.spotify.com/album/3YryuS3uTm7wogdtqaAb6A", type: "EP" },

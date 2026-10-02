@@ -81,7 +81,7 @@ shelf([
   { artist: "Robert Wyatt", album: "Rock Bottom", released: "1974", spotify: "https://open.spotify.com/album/6CGNTxZBa20mHcsAIqQtit" },
   { artist: "Scott Walker", album: "The Drift", released: "2006", spotify: "https://open.spotify.com/album/3A7Gfj808zT13fi4M4OrwT" },
   { artist: "Sigur Rós", album: "Ágætis byrjun", released: "1999", spotify: "https://open.spotify.com/album/1DMMv1Kmoli3Y9fVEZDUVC" },
-  { artist: "Slint", album: "Spiderland", released: "1991", spotify: "https://open.spotify.com/album/0cp3HJ6szImZfnVSPHDqAU" },
+  { artist: "Slint", album: "Spiderland", released: "1991", spotify: "https://open.spotify.com/album/0cp3HJ6szImZfnVSPHDqAU", pick: true },
   { artist: "Sonic Youth", album: "Daydream Nation", released: "1988", spotify: "https://open.spotify.com/album/3MwuBXHMWHjOur9QlZnzOj" },
   { artist: "Sonic Youth", album: "Dirty", released: "1992", spotify: "https://open.spotify.com/album/7oNRvhXwhNCfHEUGER5EhG" },
   { artist: "Sonic Youth", album: "EVOL", released: "1986", spotify: "https://open.spotify.com/album/5Bf5U1Zw9gsJh6bWaM2VY2" },

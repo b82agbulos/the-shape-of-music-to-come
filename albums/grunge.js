@@ -28,7 +28,7 @@
 shelf([
 
   { artist: "Alanis Morissette", album: "Jagged Little Pill", released: "1995", spotify: "https://open.spotify.com/album/09AwlP99cHfKVNKv4FC8VW" },
-  { artist: "Alice in Chains", album: "Dirt", released: "1992", spotify: "https://open.spotify.com/album/6jUBENAV8bj1k42Bvnoeob" },
+  { artist: "Alice in Chains", album: "Dirt", released: "1992", spotify: "https://open.spotify.com/album/6jUBENAV8bj1k42Bvnoeob", pick: true },
   { artist: "Alice in Chains", album: "Facelift", released: "1990", spotify: "https://open.spotify.com/album/5LbHbwejgZXRZAgzVAjkhj" },
   { artist: "Audioslave", album: "Audioslave", released: "2002", spotify: "https://open.spotify.com/album/293aYSIVNjjmkAwupnlxRd" },
   { artist: "Blind Melon", album: "Soup", released: "1995", spotify: "https://open.spotify.com/album/25dViuBmzYefykMckmwjKw" },
@@ -45,7 +45,7 @@ shelf([
   { artist: "Nirvana", album: "From the Muddy Banks of the Wishkah", released: "1996", spotify: "https://open.spotify.com/album/26paS1Rzj1L0d3Zr1WBTIj", type: "Live" },
   { artist: "Nirvana", album: "In Utero", released: "1993", spotify: "https://open.spotify.com/album/7wOOA7l306K8HfBKfPoafr" },
   { artist: "Nirvana", album: "Nevermind", released: "1991", spotify: "https://open.spotify.com/album/2tqNAmW9Q61osYJM7xdutO" },
-  { artist: "Pearl Jam", album: "Ten", released: "1991", spotify: "https://open.spotify.com/album/39BXqF0ttK6P3Jx3BGjMP6" },
+  { artist: "Pearl Jam", album: "Ten", released: "1991", spotify: "https://open.spotify.com/album/39BXqF0ttK6P3Jx3BGjMP6", pick: true },
   { artist: "Pearl Jam", album: "Vitalogy", released: "1994", spotify: "https://open.spotify.com/album/5pd9B3KQWKshHw4lnsSLNy" },
   { artist: "Pearl Jam", album: "Vs.", released: "1993", spotify: "https://open.spotify.com/album/2m4JZQPguyIhuleZAs3xmJ" },
   { artist: "Screaming Trees", album: "Dust", released: "1996", spotify: "https://open.spotify.com/album/0YW9Qke0AfzNVISsPQ7KoF" },
@@ -55,7 +55,7 @@ shelf([
   { artist: "Temple of the Dog", album: "Temple of the Dog", released: "1991", spotify: "https://open.spotify.com/album/63HdXCn0Xz1pRZc2GzMw7k" },
   { artist: "The Smashing Pumpkins", album: "Gish", released: "1991", spotify: "https://open.spotify.com/album/0FoOJucC8temyTUBpbapWC" },
   { artist: "The Smashing Pumpkins", album: "Mellon Collie and the Infinite Sadness", released: "1995", spotify: "https://open.spotify.com/album/09LdvC3k8ybEmyeiShUWw2" },
-  { artist: "The Smashing Pumpkins", album: "Siamese Dream", released: "1993", spotify: "https://open.spotify.com/album/4UVERYsIzs6xbDYO8srlqd" },
+  { artist: "The Smashing Pumpkins", album: "Siamese Dream", released: "1993", spotify: "https://open.spotify.com/album/4UVERYsIzs6xbDYO8srlqd", pick: true },
   { artist: "Urge Overkill", album: "Saturation", released: "1993", spotify: "https://open.spotify.com/album/1fpJMY7H1ecF5fqbcbT9Lj" },
   { artist: "Veruca Salt", album: "American Thighs", released: "1994", spotify: "https://open.spotify.com/album/3sJgSPUnFjlRIckcgtbWyj" },
 
