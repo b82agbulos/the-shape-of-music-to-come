@@ -90,7 +90,7 @@ window.SHOP = {
 
     { id: "halloween", wing: "back", name: "Halloween", accent: "#ff7a1a", crateImg: "halloween-crate", subs: [
       { id: "compilations", name: "Compilations" },
-      { id: "playlists",    name: "Playlists", accent: "#c07bff" },
+      { id: "playlists",    name: "Playlists", accent: "#c07bff", webCovers: false },
       { id: "podcasts", name: "Podcasts / Broadcasts", accent: "#ffb35c" },
       { id: "stage-screen", name: "Stage & Screen", subs: [
         { id: "sound-effects", name: "Sound Effects", accent: "#8ef0c8" },
@@ -105,6 +105,6 @@ window.SHOP = {
       { id: "spoken-word",   name: "Spoken Word", accent: "#dcbc90" }
     ]},
 
-    { id: "playlists", wing: "back", name: "Playlists", accent: "#f4b048" }
+    { id: "playlists", wing: "back", name: "Playlists", accent: "#f4b048", webCovers: false }
   ]
 };

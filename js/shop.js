@@ -10,6 +10,13 @@
   var SHOP = window.SHOP;
   if (!SHOP) { console.error("js/shop-map.js did not load"); return; }
 
+  // the ?v=... on this file's own <script> tag; the album files are loaded with the same stamp,
+  // so changing it in index.html and room.html makes every browser fetch fresh album files too
+  var VER = (function () {
+    var m = ((document.currentScript && document.currentScript.src) || "").match(/[?&]v=([^&#]+)/);
+    return m ? m[1] : "";
+  })();
+
   /* ---------- helpers ---------- */
   var collator = new Intl.Collator("en", { sensitivity: "base", numeric: true });
   function h(tag, attrs, kids) {
@@ -272,6 +279,12 @@
       });
     }
   };
+  // no web lookups for lines without an artist, or in rooms marked webCovers: false in js/shop-map.js
+  // (the Playlists rooms: your own lists, which a same-named album elsewhere would only mislabel)
+  function webCoversOk(rec) {
+    var r = byId.get(rec.sections[0]);
+    return !!rec.artist && !(r && r.webCovers === false);
+  }
   var webAsks = {};        // lookups already waiting, so a re-sort or the dig filter doesn't ask twice
   function webCover(src, rec, el) {
     if (!rec.album || /^podcast$/i.test(rec.album)) return Promise.resolve(null);
@@ -291,6 +304,7 @@
 
   var shelves = {};        // room full id -> the list from its album file
   var fileTrouble = [];    // album files that loaded but didn't run (a typo)
+  var fileMissing = [];    // album files the browser couldn't find (not in the albums folder)
 
   // each albums/*.js file calls shelf([ ... ]) — the room comes from which file it is
   window.shelf = function (a, b) {
@@ -336,6 +350,7 @@
 
   var records = [];
   var covers = {};
+  var geniusCovers = {};   // js/genius-covers.js, made by genius-covers.ps1 on your computer
   function makeRecord(a, roomId) {
     var artist = String(a.artist || "").trim(), album = String(a.album || "").trim();
     var key = recKey(artist, album);
@@ -358,6 +373,7 @@
       cover: coverPath(a.cover),                                       // cover: "..." in the album file
       coverAuto: coverFileName(artist, album),                         // images/covers/Artist - Album.jpg
       coverLib: lib.cover || "",                                       // Melodic Mosaic
+      coverGenius: geniusCovers[key] || "",                            // Genius (images/genius/)
       note: a.note || "",
       pick: a.pick === true || a.pick === "yes" || isHousePick(artist, album)   // yours, or on the house list
     };
@@ -365,6 +381,8 @@
   function buildRecords() {
     covers = {};
     (window.COVER_LIBRARY || []).forEach(function (c) { covers[recKey(c.artist, c.album)] = c; });
+    geniusCovers = {};
+    (window.GENIUS_COVERS || []).forEach(function (c) { if (c && c.cover) geniusCovers[recKey(c.artist, c.album)] = c.cover; });
 
     records = [];
     order.forEach(function (room) {
@@ -625,9 +643,10 @@
     opts = opts || {};
     var hasLink = !!rec.link;
     var label = (rec.artist ? rec.artist + " — " : "") + rec.album + (rec.year ? " (" + rec.year + ")" : "");
+    var where = !rec.spotify && /^https?:\/\/(drive|docs)\.google\.com\//i.test(rec.link) ? "Open in Google Drive" : "Play";   // playlists
     var el = h(hasLink ? "a" : "div", hasLink
       ? { class: "record", href: rec.link, target: "_blank", rel: "noopener", "data-key": rec.key,
-          title: "Play: " + label, "aria-label": "Play " + label,
+          title: where + ": " + label, "aria-label": where + " " + label + (where === "Play" ? "" : " (opens in a new tab)"),
           "aria-expanded": rec.spotify ? "false" : null }
       : { class: "record no-link", tabindex: "0", title: label + " — link coming soon", "aria-label": label + ", no link yet" });
     if (rec.spotify) el.addEventListener("click", function (e) {
@@ -638,13 +657,14 @@
 
     var sleeve = h("div", { class: "sleeve" }, [h("span", { class: "disc", "aria-hidden": "true" }, [h("i")])]);
     // cover, in order: cover: "..." on the album's line; the album's Spotify cover;
-    // images/covers/Artist - Album.jpg (or .png); the Melodic Mosaic cover; Wikipedia; MusicBrainz;
+    // images/covers/Artist - Album.jpg (or .png); the Melodic Mosaic cover; Genius; Wikipedia; MusicBrainz;
     // Apple Music. The plain labelled sleeve sits underneath until one of them arrives (or for good).
     var tries = (rec.cover ? [rec.cover] : [])
       .concat(rec.spotify ? [{ spotify: rec.spotify }] : [])
       .concat(!rec.cover && rec.coverAuto ? [rec.coverAuto + ".jpg", rec.coverAuto + ".png"] : [])
       .concat(rec.coverLib && rec.coverLib !== rec.cover ? [rec.coverLib] : [])
-      .concat(WEB_SOURCES.map(function (s) { return { web: s }; }));
+      .concat(rec.coverGenius ? [rec.coverGenius] : [])
+      .concat(webCoversOk(rec) ? WEB_SOURCES.map(function (s) { return { web: s }; }) : []);
     if (tries.length) {
       var n = -1;
       sleeve.appendChild(coverFallback(rec));
@@ -812,7 +832,7 @@
     });
 
     // house Staff Picks (js/staff-picks.js -> window): at the bottom, below the rooms
-    var win = windowPicks();
+    var win = windowPicks().sort(function (a, b) { return SORTS.date.cmp(a.rec, b.rec, 1); });   // oldest first
     if (win.length) {
       var perRow = win.length <= 6 ? win.length : Math.ceil(win.length / 2);
       var rows = [];
@@ -918,7 +938,7 @@
         pickSeen[k] = true;
         picks.push(rec);
       });
-    picks.sort(function (a, b) { return SORTS.artist.cmp(a, b, 1); });
+    picks.sort(function (a, b) { return SORTS.date.cmp(a, b, 1); });     // oldest first; undated at the end
     if (picks.length) {
       var shelf = h("div", { class: "shelf" }, picks.map(function (rec) {
         var el = recordEl(rec);
@@ -1010,7 +1030,12 @@
         away.appendChild(elsewhere);
       }
       if (!own.length) {
-        grid.appendChild(h("div", { class: "empty" }, [h("strong", { text: "Still stocking this one." }), "New arrivals are on the way."]));
+        // an empty room because its album file is missing or broken says so (a note for you, small print for visitors)
+        var f = albumFile(room);
+        var why = fileMissing.indexOf(f) > -1 ? f + " wasn't found. It belongs in the albums folder, named exactly that."
+          : fileTrouble.indexOf(f) > -1 ? f + " has a typo, so nothing on it could be read (F12 → Console shows the line)." : "";
+        grid.appendChild(h("div", { class: "empty" }, [h("strong", { text: "Still stocking this one." }), "New arrivals are on the way.",
+          why ? h("small", { class: "empty-why", text: why }) : null]));
         count.textContent = "";
         return;
       }
@@ -1054,13 +1079,13 @@
   order.forEach(function (room) {
     var file = albumFile(room);
     var el = document.createElement("script");
-    el.src = file;
+    el.src = file + (VER ? "?v=" + encodeURIComponent(VER) : "");
     el.setAttribute("data-room", room.fullId);
     el.onload = function () {
       if (!(room.fullId in shelves)) fileTrouble.push(file);            // loaded but never reached shelf(): a typo
       done();
     };
-    el.onerror = function () { shelves[room.fullId] = []; done(); };     // no file for this room: empty shelf
+    el.onerror = function () { shelves[room.fullId] = []; fileMissing.push(file); done(); };     // no file for this room: empty shelf
     document.head.appendChild(el);
   });
 
