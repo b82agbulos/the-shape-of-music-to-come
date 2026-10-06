@@ -122,7 +122,7 @@ shelf([
 | `note: "..."` | Handwritten card under a Staff Pick |
 | `type: "EP"` | Small badge on the cover (`"Live"`, `"Comp"`… work too) |
 | `cover: "some-file.jpg"` | Use this picture instead of Spotify's. A bare file name means `images/covers/some-file.jpg`; a path or web address is used as written. |
-| `link: "https://..."` | For an album that isn't on Spotify: Play opens this link instead (Drive, Bandcamp, YouTube…) |
+| `link: "https://..."` | Play opens this link (in a new tab) instead of Spotify: your Google Drive folder, Bandcamp, YouTube… If the line also has a Spotify link, Spotify still supplies the cover. |
 | `sortAs: "Dylan, Bob"` | File it under a different name |
 
 **Playlists** (`albums/playlists.js`): the title goes in `album`, `artist` stays empty, `link` is the playlist's
@@ -273,7 +273,7 @@ Names are shown exactly as Last.fm has them (the Melodic Mosaic version title-ca
 4. It'll be at `https://b82agbulos.github.io/the-shape-of-music-to-come/`.
 
 **Phones showing an old look after an update?** Browsers keep old copies of `css/shop.css` and the `js/`
-files. `index.html` and `room.html` load them as `shop.css?v=20261006d` etc.; whenever a new `css/` or `js/`
+files. `index.html` and `room.html` load them as `shop.css?v=20261006f` etc.; whenever a new `css/` or `js/`
 file goes up, change that `v=` value in both pages (any new text works) and every browser fetches the new one.
 The album files are loaded with the same `v=`, so changing it also makes everyone get fresh album files right away
 (without a change they catch up on their own within about 10 minutes).
