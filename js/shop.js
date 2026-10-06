@@ -365,6 +365,7 @@
       year: yearRange(released) || (dk ? dk.slice(0, 4) : ""),       // "2020-2021" shows as a range (podcasts, series)
       dateKey: dk,
       artistKey: stripKey(a.sortAs || (isVarious(artist) ? album : artist) || album),   // compilations file under their title
+      various: !a.sortAs && isVarious(artist),                          // Various Artists: after the named artists
       titleKey: stripKey(album),
       sections: roomId ? [roomId] : [],
       spotify: spotifyRef(a.spotify),
@@ -522,17 +523,17 @@
     artist: {
       label: "Artist · Title",
       cmp: function (a, b, dir) {
-        return collator.compare(a.artistKey, b.artistKey) || collator.compare(a.titleKey, b.titleKey) || cmpDate(a, b, 1);
+        return (a.various - b.various) || collator.compare(a.artistKey, b.artistKey) || collator.compare(a.titleKey, b.titleKey) || cmpDate(a, b, 1);
       },
-      group: function (r) { return initialOf(r.artistKey); }
+      group: function (r) { return r.various ? "Various" : initialOf(r.artistKey); }
     },
     "artist-date": {
       label: "Artist · Release date",
       dated: true,
       cmp: function (a, b, dir) {
-        return collator.compare(a.artistKey, b.artistKey) || cmpDate(a, b, dir) || collator.compare(a.titleKey, b.titleKey);
+        return (a.various - b.various) || collator.compare(a.artistKey, b.artistKey) || cmpDate(a, b, dir) || collator.compare(a.titleKey, b.titleKey);
       },
-      group: function (r) { return initialOf(r.artistKey); }
+      group: function (r) { return r.various ? "Various" : initialOf(r.artistKey); }
     },
     date: {
       label: "Release date",
