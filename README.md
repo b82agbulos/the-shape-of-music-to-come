@@ -14,16 +14,18 @@ js/staff-picks.js     house Staff Picks: the window display + albums that are al
 css/shop.css          all styling
 js/shop.js            the engine (no need to edit)
 js/now-playing.js     Currently Playing bar (no need to edit)
-prepare-images.ps1    renames + compresses your 50 room pictures into images/rooms/
+prepare-images.ps1    compresses your room pictures (images/rooms/) and playlist covers (images/playlists/)
+genius-covers.ps1     finds covers on Genius for albums without a Spotify link (images/genius/, js/genius-covers.js)
 ```
 
 You add albums in `albums/`, and occasionally change rooms in `js/shop-map.js`. Nothing else needs editing.
 
 ---
 
-## 1. Put the room pictures in
+## 1. Put the room pictures and playlist covers in
 
-Your images are in `Downloads\The Shape of Music to Come images`. From this folder, in PowerShell:
+The script looks for the room pictures in `Downloads\The Shape of Music to Come images`, and if that folder
+isn't there, in the site's own `images` folder. From the site folder, in PowerShell:
 
 ```
 powershell -ExecutionPolicy Bypass -File .\prepare-images.ps1
@@ -34,6 +36,7 @@ It matches each file by name (spaces, dashes and punctuation don't matter), then
 from several MB to a few hundred KB, which matters because the Directory shows 24 of them at once.
 
 - `-DryRun` shows the matching without writing anything.
+- `-CoversOnly` does just the playlist covers.
 - `-Source "D:\somewhere\else"` if the images moved.
 - If Windows can't convert for some reason, it copies the originals instead (they still work, just heavier).
 
@@ -51,6 +54,28 @@ room and `Playlists.png` is the Playlists room. When you add or replace a pictur
 If a room ever has no picture, it borrows its parent room's (or the storefront) until you add one.
 
 You don't need to bake text into the pictures. Each room's name is shown as a neon sign under the picture.
+
+### Playlist covers
+
+The same run also turns every picture in `images\playlists-covers\` into a 600 px JPG in `images\playlists\`,
+named after the file in lower case with dashes (`Angst & Anthems_ Gritty Rock Collage.png` becomes
+`angst-anthems-gritty-rock-collage.jpg`). Each playlist's `cover:` line in `albums/playlists.js` points at
+one of those. At the end the script checks `albums/playlists.js` and lists any playlist whose cover is missing,
+with the name it expected, so a renamed picture is easy to spot.
+
+Upload `images/playlists/` to GitHub. The originals in `images/playlists-covers/` (and the big room PNGs)
+can stay on your computer.
+
+### Step by step (Windows)
+
+1. Open the site folder (`Desktop\www\the-shape-of-music-to-come`) in File Explorer.
+2. Click the address bar, type `powershell`, press Enter. A PowerShell window opens already in that folder.
+3. Paste this and press Enter:
+   ```
+   powershell -ExecutionPolicy Bypass -File .\prepare-images.ps1
+   ```
+4. Read the end of what it prints: "All 33 playlist covers are in place." means you're done.
+5. Upload `images/rooms/` and `images/playlists/` (and any changed album files) to GitHub.
 
 ---
 
@@ -100,6 +125,11 @@ shelf([
 | `link: "https://..."` | For an album that isn't on Spotify: Play opens this link instead (Drive, Bandcamp, YouTube…) |
 | `sortAs: "Dylan, Bob"` | File it under a different name |
 
+**Playlists** (`albums/playlists.js`): the title goes in `album`, `artist` stays empty, `link` is the playlist's
+Google Drive folder, and `cover` is its picture in `images/playlists/`. Play opens the Drive folder in a new tab
+(on a phone with the Google Drive app, usually in the app). The site doesn't look up covers on the web for the
+Playlists rooms, so a playlist never borrows a same-named album's cover.
+
 **Podcasts and radio shows:** put the show's name in `artist`, `"Podcast"` in `album`, and the years it ran in
 `released` (`"2020-2021"` shows as 2020–2021). A Spotify show or episode link (`open.spotify.com/show/…`) works in `spotify`.
 
@@ -123,7 +153,33 @@ public on GitHub), but their covers work by hand: right-click the cover on the a
 address**, and paste it as `cover: "https://f4.bcbits.com/img/....jpg"`.
 
 Order of preference: `cover:` on the line → Spotify → your saved `Artist - Album` image → the Melodic Mosaic
-cover → Wikipedia → Cover Art Archive → Apple Music → a plain labelled sleeve.
+cover → Genius (see below) → Wikipedia → Cover Art Archive → Apple Music → a plain labelled sleeve.
+
+### Covers from Genius (`genius-covers.ps1`)
+
+Genius only answers with your own private key, so this runs on your computer, not on the site. It looks up
+every album that has no Spotify link and no `cover:` line (your playlists are left alone), saves each cover it
+finds as a 500 px JPG in `images\genius\`, and lists them in `js/genius-covers.js`. Visitors then get those
+covers straight away, with no lookups.
+
+1. In the site folder's address bar type `powershell`, press Enter.
+2. Try it on a few first:
+   ```
+   powershell -ExecutionPolicy Bypass -File .\genius-covers.ps1 -Limit 20
+   ```
+   The first time it asks for your Genius **Client Access Token** (genius.com/api-clients → your app →
+   Generate Access Token). It keeps it in your user folder (`.the-shape-of-music-to-come`), never in the site
+   folder, so it can't end up on GitHub.
+3. Then the rest (it skips what it already found):
+   ```
+   powershell -ExecutionPolicy Bypass -File .\genius-covers.ps1
+   ```
+   It takes a while (a few lookups per album, gently paced). Ctrl+C is safe; rerun to carry on.
+4. Upload `js/genius-covers.js` and the `images/genius/` folder.
+
+Albums Genius doesn't have are remembered and skipped next time; `-Retry` asks again. `-NewToken` swaps the token.
+A cover is only used when the album's title and artist match, but if one is wrong, delete its line in
+`js/genius-covers.js`.
 
 ```js
   { artist: "Joy Division", album: "Unknown Pleasures", released: "1979-06-15",
@@ -137,7 +193,7 @@ the file; F12 → Console gives the line number. One broken file never affects t
 
 ## House Staff Picks (`js/staff-picks.js`)
 
-- **`window`**: the Staff Picks display at the bottom of the Directory, below the rooms. Shown in the order listed, five on the top shelf and four below. Each line carries its own
+- **`window`**: the Staff Picks display at the bottom of the Directory, below the rooms. Shown in release order, oldest first, five on the top shelf and four below. Each line carries its own
   Spotify link; if the same album is also filed in a room, the room's line is used (and the display
   gets a "Find it in …" link to that room).
 - **`always`**: albums that are a Staff Pick in whatever room they're filed in, automatically. No
@@ -158,7 +214,7 @@ from a room brings the results back, and a search can be shared as a link.
 
 1. The room scene (your 1920×1080 picture) and its neon sign
 2. **Sections**: the sub-rooms, as doorways (only on rooms that have them)
-3. **Staff Picks**: on a shelf, with shelf-talkers. A main room also shows its sections' picks (Neo Soul's in
+3. **Staff Picks**: on a shelf, with shelf-talkers, in release order (oldest first; undated ones at the end). A main room also shows its sections' picks (Neo Soul's in
    R&B / Soul / Funk, Conscious Hip Hop's in Hip Hop), each marked "Find it in" its section. The Directory's own
    Staff Picks display is only the `window` list in `js/staff-picks.js`.
 4. **The bins**: the room's own records, i.e. the ones filed to that room and not to one of its sub-rooms
@@ -217,5 +273,12 @@ Names are shown exactly as Last.fm has them (the Melodic Mosaic version title-ca
 4. It'll be at `https://b82agbulos.github.io/the-shape-of-music-to-come/`.
 
 **Phones showing an old look after an update?** Browsers keep old copies of `css/shop.css` and the `js/`
-files. `index.html` and `room.html` load them as `shop.css?v=20261002a` etc.; whenever a new `css/` or `js/`
+files. `index.html` and `room.html` load them as `shop.css?v=20261006d` etc.; whenever a new `css/` or `js/`
 file goes up, change that `v=` value in both pages (any new text works) and every browser fetches the new one.
+The album files are loaded with the same `v=`, so changing it also makes everyone get fresh album files right away
+(without a change they catch up on their own within about 10 minutes).
+
+**A room says "Still stocking this one" but its file has albums?** Under that message the room says why:
+"albums/xyz.js wasn't found" means the file isn't in the `albums` folder (on GitHub, open the `albums` folder and
+check it's there: files dragged onto GitHub's upload page land in whichever folder you have open), and
+"has a typo" means a missing comma or quote.
