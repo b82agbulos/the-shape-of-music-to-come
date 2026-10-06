@@ -44,16 +44,15 @@
     } catch (e) { return null; }
   }
   function safeSrc(src) {
-    // encode spaces, apostrophes, #, ? etc. in file names without double-encoding
     if (!src) return "";
-    var m = src.match(/^([a-z]+:\/\/[^/]+)?(.*)$/i);
-    var path = m[2], query = "";
-    if (m[1]) { var q = path.search(/[?#]/); if (q > -1) { query = path.slice(q); path = path.slice(0, q); } }
-    path = path.split("/").map(function (seg) {
+    // a web address (Discogs, Genius, Melodic Mosaic…) is used as written, apart from spaces: re-encoding it
+    // would turn Discogs' "rs:fit/g:sm" into "rs%3Afit/g%3Asm", which Discogs doesn't recognise
+    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(src)) return src.replace(/ /g, "%20").replace(/"/g, "%22");
+    // a file of yours: encode spaces, #, ? etc. in its name, without double-encoding
+    return src.split("/").map(function (seg) {
       try { seg = decodeURIComponent(seg); } catch (e) {}
       return encodeURIComponent(seg);
     }).join("/");
-    return (m[1] || "") + path + query;
   }
   function stripKey(s) {
     return String(s || "")
@@ -369,7 +368,10 @@
       titleKey: stripKey(album),
       sections: roomId ? [roomId] : [],
       spotify: spotifyRef(a.spotify),
-      link: (spotifyRef(a.spotify) || {}).url || String(a.link || "").trim(),
+      // Play opens link: when there is one (e.g. your Google Drive folder), otherwise the Spotify album;
+      // a Spotify link alongside a link: still supplies the cover
+      link: String(a.link || "").trim() || (spotifyRef(a.spotify) || {}).url || "",
+      ownLink: !!String(a.link || "").trim(),
       cover: coverPath(a.cover),                                       // cover: "..." in the album file
       coverAuto: coverFileName(artist, album),                         // images/covers/Artist - Album.jpg
       coverLib: lib.cover || "",                                       // Melodic Mosaic
@@ -643,13 +645,14 @@
     opts = opts || {};
     var hasLink = !!rec.link;
     var label = (rec.artist ? rec.artist + " — " : "") + rec.album + (rec.year ? " (" + rec.year + ")" : "");
-    var where = !rec.spotify && /^https?:\/\/(drive|docs)\.google\.com\//i.test(rec.link) ? "Open in Google Drive" : "Play";   // playlists
+    var popOut = !!rec.spotify && !rec.ownLink;                  // Spotify's player pops out beside the record
+    var where = /^https?:\/\/(drive|docs)\.google\.com\//i.test(rec.link) ? "Open in Google Drive" : "Play";
     var el = h(hasLink ? "a" : "div", hasLink
       ? { class: "record", href: rec.link, target: "_blank", rel: "noopener", "data-key": rec.key,
           title: where + ": " + label, "aria-label": where + " " + label + (where === "Play" ? "" : " (opens in a new tab)"),
-          "aria-expanded": rec.spotify ? "false" : null }
+          "aria-expanded": popOut ? "false" : null }
       : { class: "record no-link", tabindex: "0", title: label + " — link coming soon", "aria-label": label + ", no link yet" });
-    if (rec.spotify) el.addEventListener("click", function (e) {
+    if (popOut) el.addEventListener("click", function (e) {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // let modified clicks open Spotify
       e.preventDefault();
       openPlayer(el, rec, label);
