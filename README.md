@@ -226,7 +226,7 @@ from a room brings the results back, and a search can be shared as a link.
 - **Artist · Release date**: artists A→Z, each artist's catalogue in release order.
 - **Release date**: the whole room chronologically, divided by decade.
 
-The last two have an Oldest first / Newest first toggle. "Various Artists" compilations are filed under their title, the way soundtrack bins are. Leading "The", "A", "An" and punctuation are
+The last two have an Oldest first / Newest first toggle. "Various Artists" compilations sit after the named artists, behind their own "Various" divider, in title order (in the release-date sort they mix in by date). Leading "The", "A", "An" and punctuation are
 ignored for filing (The Clash under C, "...And Justice for All" under A), accents are ignored (Björk under B).
 Letter or decade divider cards stick up behind the first record of each group, like a real bin.
 Every room has a "Dig through this crate" box. It filters the room's records, and anything that matches
@@ -273,7 +273,7 @@ Names are shown exactly as Last.fm has them (the Melodic Mosaic version title-ca
 4. It'll be at `https://b82agbulos.github.io/the-shape-of-music-to-come/`.
 
 **Phones showing an old look after an update?** Browsers keep old copies of `css/shop.css` and the `js/`
-files. `index.html` and `room.html` load them as `shop.css?v=20261006f` etc.; whenever a new `css/` or `js/`
+files. `index.html` and `room.html` load them as `shop.css?v=20261006g` etc.; whenever a new `css/` or `js/`
 file goes up, change that `v=` value in both pages (any new text works) and every browser fetches the new one.
 The album files are loaded with the same `v=`, so changing it also makes everyone get fresh album files right away
 (without a change they catch up on their own within about 10 minutes).
