@@ -29,7 +29,7 @@ shelf([
 
   { artist: "Amon Tobin", album: "Permutation", released: "1998", spotify: "https://open.spotify.com/album/7jxs0XY2yJS36PZCjUv4Hp", pick: true },
   { artist: "Burial", album: "Untrue", released: "2007", spotify: "https://open.spotify.com/album/1C30LhZB9I48LdpVCRRYvq", pick: true },
-  { artist: "DJ/rupture", album: "Uproot", released: "2008", spotify: "" },
+  { artist: "DJ/rupture", album: "Uproot", released: "2008", spotify: "", link: "https://drive.google.com/drive/folders/1cgGEEy_7Bqlx19HtB43knRKDHTOvG394?usp=drive_link", cover: "https://i.discogs.com/EL_QhOfmUeI5LVHkkWqVPKdu9KTRKpGY0qlxlrZK7Cg/rs:fit/g:sm/q:90/h:470/w:470/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTE0ODMw/NjktMTIyMzE0ODM2/Ni5qcGVn.jpeg" },
   { artist: "James Blake", album: "CMYK", released: "2010", spotify: "https://open.spotify.com/album/0LSInSSnuRkl4G6cQ14dFB", type: "EP" },
   { artist: "James Blake", album: "Klavierwerke", released: "2010", spotify: "https://open.spotify.com/album/3IP1sBzXWf7qEq85o2ztJC", type: "EP" },
   { artist: "James Blake", album: "The Bells Sketch", released: "2010", spotify: "https://open.spotify.com/album/3zP81wPe9curAYsIdrWjgl", type: "EP" },
